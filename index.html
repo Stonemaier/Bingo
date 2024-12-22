@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Bingo Card Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700&display=swap');
+
+        body {
+            font-family: 'Red Hat Display', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background-color: #333;
+        }
+
+        #bingoCardContainer {
+            position: relative;
+            width: min(90vw, 768px);
+            height: calc(min(90vw, 768px) * (1365 / 768));
+            background: url('https://i.imgur.com/wSbpsp6.png') no-repeat center center;
+            background-size: contain;
+            margin-top: 20px;
+        }
+
+        .grid-area {
+            position: absolute;
+            top: 32.2%;
+            left: 6.4%;
+            width: 87.3%;
+            height: 56%;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            box-sizing: border-box;
+        }
+
+        .grid-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 5px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .grid-item span {
+            font-size: clamp(12px, 2.5vw, 14px);
+            font-weight: bold;
+            line-height: 1.2;
+            color: #333;
+            white-space: normal;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 4;
+            overflow: hidden;
+            max-width: 95%;
+            margin-top: 2px;
+        }
+
+        .free-square {
+            cursor: default;
+        }
+
+        .free-square img {
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .grid-item.marked::after {
+            content: "X";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            color: #e36039;
+            font-weight: bold;
+            line-height: 1;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.7;
+        }
+
+        .button-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            margin: 5px 0;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <button onclick="generateBingoCard()">Shuffle Card!</button>
+        <div id="bingoCardContainer">
+            <div class="grid-area" id="bingoGrid"></div>
+        </div>
+        <div class="button-row">
+            <button class="download-button" onclick="downloadPDF()">Download PDF</button>
+            <button class="share-button" onclick="generateShareLink()">Share/Save Progress</button>
+        </div>
+    </main>
+
+    <script>
+        const FREE_SQUARE_IMG = "https://stonemaiergames.com/wp-content/uploads/2015/01/Stonemaier-logo-Apricot-Orange-300x273.png";
+        const items = [
+            "Rate your SM games on BGG",
+            "Comment on a SM social media post",
+            "Play a game with new people",
+            "Win a cooperative game",
+            "Play a game against the Automa",
+            "Share a mid-game picture",
+            "Play 2 different Roll & Write games",
+            "Have a special treat at game night",
+            "Play a game with 8 or more players",
+            "Compliment an opponent on a clever play",
+            "Play the 1920+ games in the same week",
+            "Teach a SM game to a new player",
+            "Ask a question on Jamey's livestream",
+            "Write a review on BGG or a webstore",
+            "Make a fan card for a game",
+            "Play a game more than 5 years old",
+            "Play a game outdoors or in public",
+            "Write a story set in a SM world",
+            "Play 6 different SM games",
+            "Identify a Wingspan bird in the wild",
+            "Complete an Epic Victory in Vantage",
+            "Play the 'span' trilogy in the same month",
+            "Wear orange or game-related clothes outside",
+            "Read the July SM Newsletter"
+        ];
+
+        let currentCard = null;
+        let markedStates = null;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function generateBingoCard() {
+            const shuffledItems = shuffleArray([...items]);
+            const bingoCard = Array.from({ length: 5 }, () => []);
+
+            let itemIndex = 0;
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (row === 2 && col === 2) {
+                        bingoCard[row][col] = "Free Square";
+                    } else {
+                        bingoCard[row][col] = shuffledItems[itemIndex++];
+                    }
+                }
+            }
+
+            currentCard = bingoCard;
+            markedStates = Array.from({ length: 5 }, () => Array(5).fill(false));
+            renderBingoCard(bingoCard, markedStates);
+        }
+
+        function renderBingoCard(bingoCard, markedStates) {
+            const grid = document.getElementById("bingoGrid");
+            grid.innerHTML = ""; 
+
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    const div = document.createElement("div");
+                    div.classList.add("grid-item");
+
+                    if (row === 2 && col === 2) {
+                        div.classList.add("free-square");
+                        const img = document.createElement("img");
+                        img.src = FREE_SQUARE_IMG;
+                        div.appendChild(img);
+                    } else {
+                        const span = document.createElement("span");
+                        span.textContent = bingoCard[row][col];
+                        div.appendChild(span);
+
+                        div.addEventListener("click", () => {
+                            div.classList.toggle("marked");
+                            markedStates[row][col] = div.classList.contains("marked");
+                        });
+                    }
+
+                    if (markedStates[row][col]) {
+                        div.classList.add("marked");
+                    }
+
+                    grid.appendChild(div);
+                }
+            }
+        }
+
+        // Automatically generate a card when the page loads
+        window.onload = generateBingoCard;
+    </script>
+</body>
+</html>

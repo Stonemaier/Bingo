@@ -278,7 +278,7 @@
             url.searchParams.set("m",mB64);
             const shareURL=url.toString();
             navigator.clipboard.writeText(shareURL).then(()=>{
-                alert("Your progress link has been copied.\nPlease save/share this URL so others can see your card and marks.");
+                alert("Your custome link has been copied to your clipboard!\nPlease keep it safe so that you can pick up where you left off or share your card with others.");
             }).catch(()=>{
                 alert("Could not copy link automatically. Please copy the URL manually.");
             });

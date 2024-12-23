@@ -7,127 +7,67 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700&display=swap');
-
         body {
             font-family: 'Red Hat Display', sans-serif;
             background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
+            margin: 0; padding: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start; min-height: 100vh;
             box-sizing: border-box;
         }
-
         main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin-top: 20px;
-            width: 100%;
-            max-width: 800px;
-            box-sizing: border-box;
+            display: flex; flex-direction: column; align-items: center;
+            background: #fff; padding: 20px; border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-top: 20px;
+            width: 100%; max-width: 800px; box-sizing: border-box;
         }
-
         button {
-            background-color: #000;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 5px;
+            background-color: #000; color: white; border: none;
+            padding: 10px 20px; border-radius: 5px; cursor: pointer;
+            font-size: 16px; margin: 10px 5px;
         }
-
-        button:hover {
-            background-color: #333;
-        }
-
+        button:hover { background-color: #333; }
         #bingoCardContainer {
             position: relative;
             width: min(90vw, 768px);
             height: calc(min(90vw, 768px) * (1365 / 768));
             background: url('https://i.imgur.com/wSbpsp6.png') no-repeat center center;
-            background-size: contain;
-            margin-top: 20px;
+            background-size: contain; margin-top: 20px;
         }
-
         .grid-area {
-            position: absolute;
-            top: 32.2%;
-            left: 6.4%;
-            width: 87.3%;
-            height: 56%;
-            display: grid;
+            position: absolute; top: 32.2%; left: 6.4%;
+            width: 87.3%; height: 56%; display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(5, 1fr);
             box-sizing: border-box;
         }
-
         .grid-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 5px;
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 5px; position: relative;
+            cursor: pointer; overflow: hidden;
         }
-
         .grid-item span {
             font-size: clamp(12px, 2.5vw, 14px);
-            font-weight: bold;
-            line-height: 1.2;
-            color: #333;
-            white-space: normal;
-            word-break: break-word;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 4;
-            overflow: hidden;
-            max-width: 95%;
-            margin-top: 2px;
+            font-weight: bold; line-height: 1.2; color: #333;
+            white-space: normal; word-break: break-word;
+            display: -webkit-box; -webkit-box-orient: vertical;
+            -webkit-line-clamp: 4; overflow: hidden;
+            max-width: 95%; margin-top: 2px;
         }
-
         .free-square {
             cursor: default;
         }
-
         .free-square img {
-            max-width: 90%;
-            max-height: 90%;
+            max-width: 90%; max-height: 90%;
         }
-
         .grid-item.marked::after {
-            content: "X";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 120px;
-            color: #e36039;
-            font-weight: bold;
-            line-height: 1;
-            pointer-events: none;
-            z-index: 2;
-            opacity: 0.7;
+            content: "X"; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); font-size: 120px;
+            color: #e36039; font-weight: bold; line-height: 1;
+            pointer-events: none; z-index: 2; opacity: 0.7;
         }
-
         .button-row {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-            margin: 5px 0;
-            flex-wrap: wrap;
+            display: flex; flex-direction: row; justify-content: center;
+            align-items: center; margin: 5px 0; flex-wrap: wrap;
         }
     </style>
 </head>
@@ -142,10 +82,9 @@
             <button class="share-button" onclick="generateShareLink()">Share/Save Progress</button>
         </div>
     </main>
-
     <script>
-        const FREE_SQUARE_IMG = "https://stonemaiergames.com/wp-content/uploads/2015/01/Stonemaier-logo-Apricot-Orange-300x273.png";
-        const items = [
+        const FREE_SQUARE_IMG="https://stonemaiergames.com/wp-content/uploads/2015/01/Stonemaier-logo-Apricot-Orange-300x273.png";
+        const items=[
             "Rate your SM games on BGG",
             "Comment on a SM social media post",
             "Play a game with new people",
@@ -171,74 +110,185 @@
             "Wear orange or game-related clothes outside",
             "Read the July SM Newsletter"
         ];
-
-        let currentCard = null;
-        let markedStates = null;
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        let currentCard=null;
+        let markedStates=null;
+        function shuffleArray(array){
+            for(let i=array.length-1;i>0;i--){
+                const j=Math.floor(Math.random()*(i+1));
+                [array[i],array[j]]=[array[j],array[i]];
             }
             return array;
         }
-
-        function generateBingoCard() {
-            const shuffledItems = shuffleArray([...items]);
-            const bingoCard = Array.from({ length: 5 }, () => []);
-
-            let itemIndex = 0;
-            for (let row = 0; row < 5; row++) {
-                for (let col = 0; col < 5; col++) {
-                    if (row === 2 && col === 2) {
-                        bingoCard[row][col] = "Free Square";
-                    } else {
-                        bingoCard[row][col] = shuffledItems[itemIndex++];
-                    }
+        function generateBingoCard(){
+            const s=shuffleArray([...items]);
+            const b=Array.from({length:5},()=>[]);
+            let idx=0;
+            for(let r=0;r<5;r++){
+                for(let c=0;c<5;c++){
+                    if(r===2&&c===2){b[r][c]="Free Square";}
+                    else{b[r][c]=s[idx++];}
                 }
             }
-
-            currentCard = bingoCard;
-            markedStates = Array.from({ length: 5 }, () => Array(5).fill(false));
-            renderBingoCard(bingoCard, markedStates);
+            currentCard=b;
+            markedStates=Array.from({length:5},()=>Array(5).fill(false));
+            renderBingoCard(b,markedStates);
         }
-
-        function renderBingoCard(bingoCard, markedStates) {
-            const grid = document.getElementById("bingoGrid");
-            grid.innerHTML = ""; 
-
-            for (let row = 0; row < 5; row++) {
-                for (let col = 0; col < 5; col++) {
-                    const div = document.createElement("div");
-                    div.classList.add("grid-item");
-
-                    if (row === 2 && col === 2) {
-                        div.classList.add("free-square");
-                        const img = document.createElement("img");
-                        img.src = FREE_SQUARE_IMG;
-                        div.appendChild(img);
-                    } else {
-                        const span = document.createElement("span");
-                        span.textContent = bingoCard[row][col];
-                        div.appendChild(span);
-
-                        div.addEventListener("click", () => {
-                            div.classList.toggle("marked");
-                            markedStates[row][col] = div.classList.contains("marked");
+        function renderBingoCard(b,m){
+            const g=document.getElementById("bingoGrid");
+            g.innerHTML="";
+            for(let r=0;r<5;r++){
+                for(let c=0;c<5;c++){
+                    const d=document.createElement("div");
+                    d.classList.add("grid-item");
+                    if(r===2&&c===2){
+                        d.classList.add("free-square");
+                        const img=document.createElement("img");
+                        img.src=FREE_SQUARE_IMG;
+                        d.appendChild(img);
+                    }else{
+                        const span=document.createElement("span");
+                        span.textContent=b[r][c];
+                        d.appendChild(span);
+                        d.addEventListener("click",()=>{
+                            d.classList.toggle("marked");
+                            m[r][c]=d.classList.contains("marked");
                         });
                     }
-
-                    if (markedStates[row][col]) {
-                        div.classList.add("marked");
-                    }
-
-                    grid.appendChild(div);
+                    if(m[r][c]){d.classList.add("marked");}
+                    g.appendChild(d);
                 }
             }
         }
-
-        // Automatically generate a card when the page loads
-        window.onload = generateBingoCard;
+        window.onload=()=>{
+            const p=new URLSearchParams(window.location.search);
+            const cVal=p.get("c");
+            const mVal=p.get("m");
+            if(cVal&&mVal){
+                try{
+                    const indices=base64ToIndices(cVal);
+                    const bin=base64ToBin(mVal);
+                    const{nc,nm}=rebuildCard(indices,bin);
+                    currentCard=nc;
+                    markedStates=nm;
+                    renderBingoCard(nc,nm);
+                }catch(e){
+                    generateBingoCard();
+                }
+            }else{
+                generateBingoCard();
+            }
+        };
+        async function downloadPDF(){
+            const{jsPDF}=window.jspdf;
+            const doc=new jsPDF();
+            const c=document.getElementById("bingoCardContainer");
+            const scale=2;
+            const cv=await html2canvas(c,{scale, useCORS:true, allowTaint:false});
+            const imgData=cv.toDataURL("image/jpeg",0.5);
+            const w=doc.internal.pageSize.getWidth();
+            const h=doc.internal.pageSize.getHeight();
+            const margin=10;
+            const aw=w-margin*2;
+            const ah=h-margin*2;
+            const ratio=cv.height/cv.width;
+            let iw=aw; let ih=iw*ratio;
+            if(ih>ah){ih=ah; iw=ih/ratio;}
+            doc.addImage(imgData,"JPEG",margin,margin,iw,ih);
+            doc.save("bingo_card.pdf");
+        }
+        function cardToIndices(){
+            const arr=[];
+            for(let r=0;r<5;r++){
+                for(let c=0;c<5;c++){
+                    const t=currentCard[r][c];
+                    const i=items.indexOf(t);
+                    arr.push(i);
+                }
+            }
+            return arr;
+        }
+        function markedToBinary(){
+            let bin="";
+            for(let r=0;r<5;r++){
+                for(let c=0;c<5;c++){
+                    bin+=markedStates[r][c]?"1":"0";
+                }
+            }
+            return bin;
+        }
+        function indicesToBase64(a){
+            const u8=new Uint8Array(a.length);
+            for(let i=0;i<a.length;i++){u8[i]=a[i];}
+            return btoa(String.fromCharCode(...u8));
+        }
+        function binToBase64(bin){
+            const len=Math.ceil(bin.length/8);
+            const u8=new Uint8Array(len);
+            for(let i=0;i<len;i++){
+                const chunk=bin.slice(i*8,i*8+8).padEnd(8,"0");
+                u8[i]=parseInt(chunk,2);
+            }
+            return btoa(String.fromCharCode(...u8));
+        }
+        function base64ToIndices(b64){
+            const str=atob(b64);
+            const u8=new Uint8Array(str.length);
+            for(let i=0;i<str.length;i++){
+                u8[i]=str.charCodeAt(i);
+            }
+            return Array.from(u8);
+        }
+        function base64ToBin(b64){
+            const str=atob(b64);
+            const u8=new Uint8Array(str.length);
+            for(let i=0;i<str.length;i++){
+                u8[i]=str.charCodeAt(i);
+            }
+            let bin="";
+            for(let x of u8){
+                bin+=x.toString(2).padStart(8,"0");
+            }
+            return bin.slice(0,25);
+        }
+        function rebuildCard(indices,bin){
+            const nc=Array.from({length:5},()=>[]);
+            const nm=Array.from({length:5},()=>[]);
+            let idx=0;
+            for(let r=0;r<5;r++){
+                for(let c=0;c<5;c++){
+                    const ii=indices[idx];
+                    nc[r][c]=items[ii];
+                    nm[r][c]=(bin[idx]==="1");
+                    idx++;
+                }
+            }
+            return{nc,nm};
+        }
+        function generateShareLink(){
+            if(!currentCard||!markedStates){
+                alert("Please shuffle a card first.");
+                return;
+            }
+            const arr=cardToIndices();
+            const bin=markedToBinary();
+            const cB64=indicesToBase64(arr);
+            const mB64=binToBase64(bin);
+            const url=new URL(window.location.href);
+            url.searchParams.set("c",cB64);
+            url.searchParams.set("m",mB64);
+            const shareURL=url.toString();
+            navigator.clipboard.writeText(shareURL).then(()=>{
+                alert("Your progress link has been copied.\nPlease save/share this URL so others can see your card and marks.");
+            }).catch(()=>{
+                alert("Could not copy link automatically. Please copy the URL manually.");
+            });
+        }
+        (function loadHtml2Canvas(){
+            const s=document.createElement("script");
+            s.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+            s.async=true;
+            document.head.appendChild(s);
+        })();
     </script>
 </body>
 </html>

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>2025 Stonemaier Bingo Challenge</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Bebas Neue", sans-serif;
+      background: #cee8ff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    #pdfContent {
+      width: 100%;
+      max-width: 800px;
+      background: #cee8ff;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header img {
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    main {
+      padding: 20px;
+    }
+    button {
+      background-color: #f2c48e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #dab080;
+    }
+    #bingoCardContainer {
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 3/2;
+      margin: 20px auto;
+      background: transparent;
+      border: none;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #bingoGrid {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 5px;
+    }
+    .grid-item {
+      background-color: #f0f0f0;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.3s, border-color 0.3s;
+      aspect-ratio: 3/2;
+    }
+    .grid-item:hover {
+      background-color: #eaeaea;
+      border-color: #999;
+    }
+    .grid-item.marked {
+      background-color: rgba(209, 247, 209, 0.5);
+      border-color: #4caf50;
+    }
+    .grid-item.marked::after,
+    .grid-item.free-square.free-clicked::after {
+      content: "X";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 60px;
+      line-height: 1;
+      color: #e36039;
+      font-weight: bold;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0.7;
+    }
+    .grid-item span {
+      font-size: clamp(12px, 1.5vw, 16px);
+      line-height: 1.2;
+      font-weight: 400;
+      color: #4c0bd1;
+      text-align: center;
+      padding: 5px;
+    }
+    .grid-item.free-square {
+      background-color: rgba(209, 247, 209, 0.5);
+      border-color: #4caf50;
+      cursor: pointer;
+    }
+    .button-row {
+      width: 100%;
+      max-width: 800px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      margin: 5px auto;
+    }
+    .button-row > button:nth-child(1) {
+      justify-self: start;
+    }
+    .button-row > button:nth-child(2) {
+      justify-self: center;
+    }
+    .button-row > button:nth-child(3) {
+      justify-self: end;
+    }
+    .social-icons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+    .social-icons a img {
+      width: 32px;
+      margin: 0 10px;
+    }
+    @media (max-width: 600px) {
+      main {
+        padding: 10px;
+      }
+      #bingoCardContainer {
+        width: 90vw;
+        aspect-ratio: unset;
+        height: auto;
+      }
+      #bingoGrid {
+        height: auto;
+      }
+      .grid-item {
+        aspect-ratio: unset;
+      }
+      .grid-item span {
+        font-size: clamp(10px, 2vw, 14px);
+      }
+      button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="pdfContent">
+    <header>
+      <img src="https://i.imgur.com/SCzXz8V.png" alt="Banner" />
+    </header>
+    <main>
+      <p style="text-align:center; font-size:16px; margin-bottom: 10px;">
+        Check boxes as you accomplish them this year &amp; celebrate your achievements with us via the social media links below.
+        Can you do all 24?
+      </p>
+      <div id="bingoCardContainer">
+        <div id="bingoGrid"></div>
+      </div>
+    </main>
+  </div>
+  <div class="button-row">
+    <button onclick="generateBingoCard()">Shuffle Card!</button>
+    <button onclick="downloadPDF()">Download PDF</button>
+    <button onclick="generateShareLink()">Share/Save Progress</button>
+  </div>
+  <div class="social-icons">
+    <a href="https://www.facebook.com/StonemaierGames/" target="_blank">
+      <img src="https://cdn3.iconfinder.com/data/icons/social-media-2253/17/Vector-2-128.png" alt="Facebook" />
+    </a>
+    <a href="https://www.youtube.com/@jameystegmaier" target="_blank">
+      <img src="https://cdn3.iconfinder.com/data/icons/picons-social/57/18-youtube-128.png" alt="YouTube" />
+    </a>
+    <a href="https://www.instagram.com/jameystegmaier/?hl=en" target="_blank">
+      <img src="https://cdn1.iconfinder.com/data/icons/social-media-rounded-corners/512/Rounded_Instagram_svg-128.png" alt="Instagram" />
+    </a>
+    <a href="https://stonemaiergames.com/discord" target="_blank">
+      <img src="https://cdn4.iconfinder.com/data/icons/vector-brand-logos/40/Discord-256.png" alt="Discord" />
+    </a>
+  </div>
+  <script>
+    const items = [
+      "Rate 5 games on BGG",
+      "Comment on a Stonemaier social media post",
+      "Play a game with new people",
+      "Win a cooperative game",
+      "Play a game against the Automa",
+      "Share a mid-game picture",
+      "Challenge a friend to Stonemaier Bingo",
+      "Have a special treat at game night",
+      "Play a game with 8+ players",
+      "Compliment an opponent on a clever play",
+      "Play Scythe and Expeditions in the same week",
+      "Teach a game to a new player",
+      "Ask a question on the Wednesday livecast",
+      "Write a review on BGG or a webstore",
+      "Make a fan card for a game",
+      "Play a game more than 5 years old",
+      "Play a game outdoors or in public",
+      "Write a story set in a Stonemaier world",
+      "Play 5 different Stonemaier games",
+      "Identify a Wingspan bird in the wild",
+      "Complete an Epic Victory in Vantage",
+      "Play the \"span\" trilogy in the same month",
+      "Wear orange or game-related clothes outside",
+      "Read the July Stonemaier Newsletter"
+    ];
+    const FREE_SQUARE_INDEX = 24;
+    let currentCard = null;
+    let markedStates = null;
+    let bingoHasHappened = false;
+    let all24HasHappened = false;
+    function shuffleArray(a) {
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+    function generateBingoCard() {
+      const shuffled = shuffleArray([...items]);
+      const b = Array.from({ length: 5 }, () => []);
+      let idx = 0;
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          if (r === 2 && c === 2) {
+            b[r][c] = FREE_SQUARE_INDEX;
+          } else {
+            b[r][c] = items.indexOf(shuffled[idx]);
+            idx++;
+          }
+        }
+      }
+      currentCard = b;
+      markedStates = Array.from({ length: 5 }, () => Array(5).fill(false));
+      markedStates[2][2] = true;
+      bingoHasHappened = false;
+      all24HasHappened = false;
+      renderBingoCard(currentCard, markedStates);
+    }
+    function renderBingoCard(card, marks) {
+      const g = document.getElementById("bingoGrid");
+      g.innerHTML = "";
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          const d = document.createElement("div");
+          d.classList.add("grid-item");
+          if (r === 2 && c === 2) {
+            d.classList.add("free-square");
+            d.classList.add("marked");
+            const img = document.createElement("img");
+            img.src = "https://stonemaiergames.com/wp-content/uploads/2015/01/Stonemaier-logo-Apricot-Orange.png";
+            img.alt = "Stonemaier Logo";
+            img.style.maxWidth = "90%";
+            img.style.maxHeight = "90%";
+            d.appendChild(img);
+          } else {
+            if (marks[r][c]) d.classList.add("marked");
+            const span = document.createElement("span");
+            span.textContent = items[card[r][c]];
+            d.appendChild(span);
+            d.addEventListener("click", () => {
+              d.classList.toggle("marked");
+              marks[r][c] = d.classList.contains("marked");
+              checkBingo();
+              checkAllClicked();
+            });
+          }
+          g.appendChild(d);
+        }
+      }
+    }
+    function hasBingo() {
+      for (let r = 0; r < 5; r++) {
+        let rowComplete = true;
+        for (let c = 0; c < 5; c++) {
+          if (!markedStates[r][c]) {
+            rowComplete = false;
+            break;
+          }
+        }
+        if (rowComplete) return true;
+      }
+      for (let c = 0; c < 5; c++) {
+        let colComplete = true;
+        for (let r = 0; r < 5; r++) {
+          if (!markedStates[r][c]) {
+            colComplete = false;
+            break;
+          }
+        }
+        if (colComplete) return true;
+      }
+      let diag1Complete = true;
+      let diag2Complete = true;
+      for (let i = 0; i < 5; i++) {
+        if (!markedStates[i][i]) diag1Complete = false;
+        if (!markedStates[i][4 - i]) diag2Complete = false;
+      }
+      return diag1Complete || diag2Complete;
+    }
+    function checkBingo() {
+      const foundBingo = hasBingo();
+      if (foundBingo && !bingoHasHappened) {
+        bingoHasHappened = true;
+        alert("Bingo! Congratulations! Keep going to earn all 24 this year!");
+      } else if (!foundBingo) {
+        bingoHasHappened = false;
+      }
+    }
+    function runConfetti() {
+      const end = Date.now() + 5000;
+      (function frame() {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 }
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 }
+        });
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      })();
+    }
+    function checkAllClicked() {
+      if (all24HasHappened) return;
+      let count = 0;
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          if (markedStates[r][c]) count++;
+        }
+      }
+      if (count === 25) {
+        all24HasHappened = true;
+        alert("Incredible! Hopefully this has been a truly memorable gaming year for you. Thanks for playing!");
+        runConfetti();
+      }
+    }
+    function cardToIndices() {
+      const arr = [];
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          arr.push(currentCard[r][c]);
+        }
+      }
+      return arr;
+    }
+    function markedToBinary() {
+      let bin = "";
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          bin += markedStates[r][c] ? "1" : "0";
+        }
+      }
+      return bin;
+    }
+    function indicesToBase64(a) {
+      const u8 = new Uint8Array(a.length);
+      for (let i = 0; i < a.length; i++) {
+        u8[i] = a[i];
+      }
+      return btoa(String.fromCharCode(...u8));
+    }
+    function binToBase64(bin) {
+      const len = Math.ceil(bin.length / 8);
+      const u8 = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        const chunk = bin.slice(i * 8, i * 8 + 8).padEnd(8, "0");
+        u8[i] = parseInt(chunk, 2);
+      }
+      return btoa(String.fromCharCode(...u8));
+    }
+    function base64ToIndices(b64) {
+      const str = atob(b64);
+      const u8 = new Uint8Array(str.length);
+      for (let i = 0; i < str.length; i++) {
+        u8[i] = str.charCodeAt(i);
+      }
+      return Array.from(u8);
+    }
+    function base64ToBin(b64) {
+      const str = atob(b64);
+      const u8 = new Uint8Array(str.length);
+      for (let i = 0; i < str.length; i++) {
+        u8[i] = str.charCodeAt(i);
+      }
+      let bin = "";
+      for (let x of u8) {
+        bin += x.toString(2).padStart(8, "0");
+      }
+      return bin.slice(0, 25);
+    }
+    function rebuildCard(indices, bin) {
+      const nc = Array.from({ length: 5 }, () => []);
+      const nm = Array.from({ length: 5 }, () => []);
+      let idx = 0;
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          const val = indices[idx];
+          if (val === FREE_SQUARE_INDEX) {
+            nc[r][c] = FREE_SQUARE_INDEX;
+          } else {
+            nc[r][c] = val;
+          }
+          nm[r][c] = bin[idx] === "1";
+          idx++;
+        }
+      }
+      return { nc, nm };
+    }
+    function generateShareLink() {
+      if (!currentCard || !markedStates) {
+        alert("Please shuffle a card first.");
+        return;
+      }
+      const arr = cardToIndices();
+      const bin = markedToBinary();
+      const cB64 = indicesToBase64(arr);
+      const mB64 = binToBase64(bin);
+      const url = new URL(window.location.href);
+      url.searchParams.set("c", cB64);
+      url.searchParams.set("m", mB64);
+      const shareURL = url.toString();
+      navigator.clipboard.writeText(shareURL).then(() => {
+        alert("Your custom link has been copied to your clipboard!\nUse it to revisit your current card or share with others.");
+      }).catch(() => {
+        alert("Could not copy link automatically. Please copy the URL manually.");
+      });
+    }
+    window.onload = () => {
+      const p = new URLSearchParams(window.location.search);
+      const cVal = p.get("c");
+      const mVal = p.get("m");
+      if (cVal && mVal) {
+        try {
+          const indices = base64ToIndices(cVal);
+          const bin = base64ToBin(mVal);
+          const { nc, nm } = rebuildCard(indices, bin);
+          currentCard = nc;
+          markedStates = nm;
+          renderBingoCard(currentCard, markedStates);
+          checkBingo();
+          checkAllClicked();
+        } catch (e) {
+          generateBingoCard();
+        }
+      } else {
+        generateBingoCard();
+      }
+    };
+    async function downloadPDF() {
+      const fsCell = document.querySelector(".grid-item.free-square");
+      const originalHTML = fsCell.innerHTML;
+      const originalClasses = Array.from(fsCell.classList);
+      fsCell.innerHTML = '<span style="color:#4c0bd1;">Free Square</span>';
+      fsCell.classList.add("marked");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const element = document.getElementById("pdfContent");
+      const scale = 2;
+      const canvas = await html2canvas(element, {
+        scale: scale,
+        useCORS: true,
+        allowTaint: false
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 0.5);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 10;
+      const availableWidth = pageWidth - margin * 2;
+      const availableHeight = pageHeight - margin * 2;
+      const imgAspectRatio = canvas.height / canvas.width;
+      let imgWidth = availableWidth;
+      let imgHeight = imgWidth * imgAspectRatio;
+      if (imgHeight > availableHeight) {
+        imgHeight = availableHeight;
+        imgWidth = imgHeight / imgAspectRatio;
+      }
+      doc.addImage(imgData, "JPEG", margin, margin, imgWidth, imgHeight);
+      doc.save("bingo_card.pdf");
+      fsCell.innerHTML = originalHTML;
+      fsCell.className = "";
+      for (let c of originalClasses) fsCell.classList.add(c);
+    }
+  </script>
+</body>
+</html>

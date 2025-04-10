@@ -181,7 +181,7 @@
     </header>
     <main>
       <p style="text-align:center; font-size:16px; margin-bottom: 10px;">
-        Check boxes as you accomplish them this year &amp; celebrate your achievements with us via the social media links below.
+        Check boxes as you accomplish them this year & celebrate your achievements with us via the social media links below.
         Can you do all 24?
       </p>
       <div id="bingoCardContainer">
@@ -240,6 +240,7 @@
     let markedStates = null;
     let bingoHasHappened = false;
     let all24HasHappened = false;
+    let initialRenderComplete = false;
     function shuffleArray(a) {
       for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -266,7 +267,9 @@
       markedStates[2][2] = true;
       bingoHasHappened = false;
       all24HasHappened = false;
+      initialRenderComplete = false;
       renderBingoCard(currentCard, markedStates);
+      initialRenderComplete = true;
     }
     function renderBingoCard(card, marks) {
       const g = document.getElementById("bingoGrid");
@@ -330,6 +333,7 @@
       return diag1Complete || diag2Complete;
     }
     function checkBingo() {
+      if (!initialRenderComplete) return;
       const foundBingo = hasBingo();
       if (foundBingo && !bingoHasHappened) {
         bingoHasHappened = true;
@@ -359,6 +363,7 @@
       })();
     }
     function checkAllClicked() {
+      if (!initialRenderComplete) return;
       if (all24HasHappened) return;
       let count = 0;
       for (let r = 0; r < 5; r++) {
@@ -475,8 +480,11 @@
           currentCard = nc;
           markedStates = nm;
           renderBingoCard(currentCard, markedStates);
-          checkBingo();
-          checkAllClicked();
+          requestAnimationFrame(() => {
+            initialRenderComplete = true;
+            checkBingo();
+            checkAllClicked();
+          });
         } catch (e) {
           generateBingoCard();
         }
